@@ -11,7 +11,7 @@ import sys
 import time
 import os
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import logging
 import ops
 import utils

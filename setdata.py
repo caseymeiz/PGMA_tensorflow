@@ -2,7 +2,8 @@ import numpy as np
 import copy 
 import pickle
 import os
-from tensorflow.examples.tutorials.mnist import input_data
+import gzip
+import struct
 
 class mnist_data(object):
     def __init__(self, x, y, x_, y_):
@@ -30,7 +31,8 @@ def mnist(dataset, task_num):
     """
     Load Dataset and set package.
     """
-    mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
+    train_images, train_labels = load_mnist('MNIST_data', 'train')
+    test_images, test_labels = load_mnist('MNIST_data', 't10k')
 
     if dataset == 'shuffle_mnist':
         x = []
@@ -38,10 +40,10 @@ def mnist(dataset, task_num):
         y = []
         y_ = []
 
-        x.append(np.concatenate((mnist.train.images, mnist.validation.images)))
-        y.append(np.concatenate((mnist.train.labels, mnist.validation.labels)))
-        x_.append(mnist.test.images)
-        y_.append(mnist.test.labels)
+        x.append(train_images)
+        y.append(train_labels)
+        x_.append(test_images)
+        y_.append(test_labels)
         
         for i in range(1, task_num):
             
@@ -65,10 +67,10 @@ def mnist(dataset, task_num):
     
     if dataset == 'disjoint_mnist':
 
-        x = np.concatenate((mnist.train.images,mnist.validation.images))
-        y = np.concatenate((mnist.train.labels,mnist.validation.labels))
-        x_ = mnist.test.images
-        y_ = mnist.test.labels
+        x = train_images
+        y = train_labels
+        x_ = test_images
+        y_ = test_labels
         task_split = int(10/task_num) 
         task_labels=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         tasks = []
@@ -121,3 +123,21 @@ def mnist(dataset, task_num):
         # print(test)
         # print(test_label)
         return train, train_label, test, test_label
+
+def load_mnist(data_dir, split):
+    images_path = os.path.join(data_dir, '%s-images-idx3-ubyte.gz' % split)
+    labels_path = os.path.join(data_dir, '%s-labels-idx1-ubyte.gz' % split)
+
+    with gzip.open(images_path, 'rb') as f:
+        _, num_images, rows, cols = struct.unpack('>IIII', f.read(16))
+        images = np.frombuffer(f.read(), dtype=np.uint8)
+        images = images.reshape(num_images, rows * cols).astype(np.float32) / 255.0
+
+    with gzip.open(labels_path, 'rb') as f:
+        _, num_labels = struct.unpack('>II', f.read(8))
+        labels = np.frombuffer(f.read(), dtype=np.uint8)
+
+    labels_one_hot = np.zeros((num_labels, 10), dtype=np.float32)
+    labels_one_hot[np.arange(num_labels), labels] = 1.0
+
+    return images, labels_one_hot

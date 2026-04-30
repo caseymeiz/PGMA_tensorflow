@@ -1,5 +1,5 @@
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import ops
 
 
@@ -36,7 +36,7 @@ def dcgan_encoder(opts, inputs, is_training=False, reuse=False):
     layer_x = inputs
     for i in range(num_layers):
         scale = 2**(num_layers - i - 1)
-        layer_x = ops.conv2d(opts, layer_x, num_units / scale,
+        layer_x = ops.conv2d(opts, layer_x, int(num_units / scale),
                              scope='h%d_conv' % i)
         if opts['batch_norm']:
             layer_x = ops.batch_norm(opts, layer_x, is_training,
