@@ -6,8 +6,10 @@ import logging
 import configs
 from wae import WAE
 import utils
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import setdata
+
+tf.disable_v2_behavior()
 
 
 

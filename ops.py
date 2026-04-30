@@ -6,7 +6,7 @@
 
 """
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import numpy as np
 import logging
 
@@ -17,11 +17,12 @@ def batch_norm(opts, _input, is_train, reuse, scope, scale=True):
     """Batch normalization based on tf.contrib.layers.
 
     """
-    return tf.contrib.layers.batch_norm(
-        _input, center=True, scale=scale,
-        epsilon=opts['batch_norm_eps'], decay=opts['batch_norm_decay'],
-        is_training=is_train, reuse=reuse, updates_collections=None,
-        scope=scope, fused=False)
+    with tf.variable_scope(scope, reuse=reuse):
+        return tf.layers.batch_normalization(
+            _input, center=True, scale=scale,
+            epsilon=opts['batch_norm_eps'],
+            momentum=opts['batch_norm_decay'],
+            training=is_train, fused=False)
 
 def upsample_nn(input_, new_size, scope=None, reuse=None):
     """NN up-sampling
